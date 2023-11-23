@@ -28,7 +28,7 @@ config.path:=conf/ir.compiler.properties
 
 build:
 	cd $(CUR_DIR)/.. && \
-		mvn clean install -DskipTests -Drevision=${target.revision} -Pexperimental ${QUIET_OPT} && \
+		mvn clean install -DskipTests -Drevision=${target.revision} && \
 		cd $(CUR_DIR)/../executor/ir/integrated && cargo build --release --bin $(rpc.target)
 
 clean:

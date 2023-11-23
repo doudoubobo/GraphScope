@@ -42,6 +42,15 @@ pub const GRIN_ERROR_CODE_UNKNOWN_DATATYPE: GrinErrorCode = 3;
 pub const GRIN_ERROR_CODE_NULL_VALUE: GrinErrorCode = 4;
 #[doc = " Enumerates the error codes of grin"]
 pub type GrinErrorCode = u32;
+pub type wchar_t = i32;
+#[repr(C)]
+#[repr(align(16))]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct max_align_t {
+    pub __clang_max_align_nonce1: i64,
+    pub __bindgen_padding_0: u64,
+    pub __clang_max_align_nonce2: u128,
+}
 cfg_if::cfg_if! {
     if #[cfg(feature = "grin_features_enable_v6d")]{
         pub type GrinGraph = *mut ::std::os::raw::c_void;

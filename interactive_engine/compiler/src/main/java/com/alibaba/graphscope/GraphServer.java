@@ -172,6 +172,9 @@ public class GraphServer {
             case "gringraphar":
                 testGraph = TestGraphFactory.GRINGRAPHAR;
                 break;
+            case "gringart":
+                testGraph = TestGraphFactory.GRINGART;
+                break;
             default:
                 throw new IllegalArgumentException("unknown graph store type");
         }

@@ -30,7 +30,7 @@ fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-#[cfg(all(feature = "grin_features_enable_graphar", not(feature = "grin_features_enable_v6d")))]
+#[cfg(all(feature = "grin_features_enable_graphar", not(feature = "grin_features_enable_v6d"), not(feature = "grin_features_enable_gart")))]
 fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo:rustc-link-search=/usr/local/lib");
     println!("cargo:rustc-link-lib=gar-grin");
@@ -38,7 +38,15 @@ fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-#[cfg(not(any(feature = "grin_features_enable_v6d", feature = "grin_features_enable_graphar")))]
+#[cfg(all(feature = "grin_features_enable_gart", not(feature = "grin_features_enable_v6d"), not(feature = "grin_features_enable_graphar")))]
+fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
+    println!("cargo:rustc-link-search=/usr/local/lib");
+    println!("cargo:rustc-link-lib=gart_grin");
+
+    Ok(())
+}
+
+#[cfg(not(any(feature = "grin_features_enable_v6d", feature = "grin_features_enable_graphar", feature = "grin_features_enable_gart")))]
 fn codegen_inplace() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
