@@ -90,7 +90,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     unsafe {
         // TODO: grin_get_partitioned_graph_from_storage accept a uri as parameter,
         // and make the uri as a configuration instead of graph object id.
-        let uri = format!("{}{}{}", "gart://127.0.0.1:23760?read_epoch=0&total_partition_num=4&local_partition_num=4&start_partition_id=", server_id, "&meta_prefix=gart_meta_");
+        // let uri = format!("{}{}{}", "gart://127.0.0.1:23760?read_epoch=0&total_partition_num=4&local_partition_num=4&start_partition_id=", server_id, "&meta_prefix=gart_meta_");
+        let uri = "gart://gart-release-etcd:2379?read_epoch=0&meta_prefix=gart_meta_";
         println!("uri: {:?}", uri);
         let uri_cstr = string_rust2c(&uri);
         let pg = grin_get_partitioned_graph_from_storage(uri_cstr);
