@@ -16,6 +16,7 @@
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
+use std::env;
 
 use graph_proxy::apis::PegasusClusterInfo;
 use graph_proxy::GrinGraphProxy;
@@ -91,7 +92,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // TODO: grin_get_partitioned_graph_from_storage accept a uri as parameter,
         // and make the uri as a configuration instead of graph object id.
         // let uri = format!("{}{}{}", "gart://127.0.0.1:23760?read_epoch=0&total_partition_num=4&local_partition_num=4&start_partition_id=", server_id, "&meta_prefix=gart_meta_");
-        let uri = "gart://gart-release-etcd:2379?read_epoch=0&meta_prefix=gart_meta_";
+        // let uri = "gart://gart-release-etcd:2379?read_epoch=0&meta_prefix=gart_meta_";
+        let read_epoch = env::var("READ_EPOCH").unwrap_or("0".to_string());
+        let meta_prefix = env::var("ETCD_PREFIX").unwrap_or("gart_meta_".to_string());
+        let etcd_endpoint = env::var("ETCD_SERVICE").unwrap_or("127.0.0.1:2379".to_string());
+        let uri = format!("gart://{}?read_epoch={}&meta_prefix={}", etcd_endpoint, read_epoch, meta_prefix);
         println!("uri: {:?}", uri);
         let uri_cstr = string_rust2c(&uri);
         let pg = grin_get_partitioned_graph_from_storage(uri_cstr);
