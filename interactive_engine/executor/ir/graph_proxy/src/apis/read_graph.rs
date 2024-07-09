@@ -15,6 +15,7 @@
 
 use std::sync::atomic::{AtomicPtr, Ordering};
 use std::sync::Arc;
+use std::collections::HashMap;
 
 use ir_common::LabelId;
 
@@ -95,6 +96,11 @@ pub trait ReadGraph: Send + Sync {
 lazy_static! {
     /// GRAPH_PROXY is a raw pointer which can be safely shared between threads.
     pub static ref GRAPH_PROXY: AtomicPtr<Arc<dyn ReadGraph >> = AtomicPtr::default();
+    /// process_partition_lists is a HashMap<u32, Vec<u32>>
+    pub static ref PROCESS_PARTITION_LISTS: std::sync::RwLock<HashMap<u32, Vec<u32>>> = std::sync::RwLock::new(HashMap::new());
+    /// server_index is a u32
+    pub static ref SERVER_INDEX: std::sync::RwLock<u32> = std::sync::RwLock::new(0);
+
 }
 
 pub fn register_graph(graph: Arc<dyn ReadGraph>) {
@@ -109,4 +115,24 @@ pub fn get_graph() -> Option<Arc<dyn ReadGraph>> {
     } else {
         Some(unsafe { (*ptr).clone() })
     }
+}
+
+pub fn replace_process_partition_lists(new_map: HashMap<u32, Vec<u32>>) {
+    let mut global_map = PROCESS_PARTITION_LISTS.write().unwrap();
+    *global_map = new_map;
+}
+
+pub fn get_process_partition_lists() -> HashMap<u32, Vec<u32>> {
+    let global_map = PROCESS_PARTITION_LISTS.read().unwrap();
+    global_map.clone()
+}
+
+pub fn replace_server_index(new_index: u32) {
+    let mut server_index = SERVER_INDEX.write().unwrap();
+    *server_index = new_index;
+}
+
+pub fn get_server_index() -> u32 {
+    let server_index = SERVER_INDEX.read().unwrap();
+    *server_index
 }

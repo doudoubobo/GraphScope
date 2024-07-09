@@ -15,9 +15,19 @@
 
 use std::convert::TryInto;
 use std::sync::Arc;
+use std::env;
+use std::collections::HashMap;
+
+use pegasus::{Configuration, JobConf, ServerConf};
+use graph_proxy::apis::PegasusClusterInfo;
+use graph_proxy::apis::{register_graph, get_process_partition_lists, get_server_index};
 
 use graph_proxy::apis::cluster_info::ClusterInfo;
 use graph_proxy::apis::partitioner::PartitionInfo;
+use graph_proxy::GrinGraphProxy;
+use graph_proxy::{create_grin_store, GrinPartition};
+use grin::grin::grin_get_partitioned_graph_from_storage;
+use grin::string_rust2c;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as algebra_pb;
 use ir_common::generated::algebra::join::JoinKind;
@@ -698,6 +708,29 @@ impl<P: PartitionInfo, C: ClusterInfo> JobAssembly<Record> for IRJobAssembly<P, 
             if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
                 debug!("{:#?}", physical_plan);
             }
+            unsafe {
+                // read the read_epoch from /tmp/read_epoch file
+                let read_epoch = std::fs::read_to_string("/tmp/read_epoch").unwrap_or("0".to_string());
+                let meta_prefix = env::var("ETCD_PREFIX").unwrap_or("gart_meta_".to_string());
+                let etcd_endpoint = env::var("ETCD_SERVICE").unwrap_or("127.0.0.1:2379".to_string());
+                let uri = format!("gart://{}?read_epoch={}&meta_prefix={}", etcd_endpoint, read_epoch, meta_prefix);
+                println!("uri: {}", uri);
+                let uri_cstr = string_rust2c(&uri);
+                let pg = grin_get_partitioned_graph_from_storage(uri_cstr);
+                let grin_graph_proxy = GrinGraphProxy::new(pg).unwrap();
+                let process_partition_list = grin_graph_proxy.get_local_partition_ids();
+                let server_index = get_server_index();
+                let process_partition_lists = get_process_partition_lists();
+                let computed_process_partition_list = process_partition_lists
+                    .get(&server_index)
+                    .unwrap_or(&Vec::new())
+                    .clone();
+                let grin_graph_proxy_arc = Arc::new(grin_graph_proxy);
+                let cluster_info = Arc::new(PegasusClusterInfo::default());
+                let grin_store =
+                    create_grin_store(grin_graph_proxy_arc, computed_process_partition_list, cluster_info.clone());
+                register_graph(grin_store);
+            }
             // input from a dummy record to trigger the computation
             let source = input.input_from(vec![Record::default()])?;
             let plan_len = physical_plan.plan.len();
@@ -728,6 +761,7 @@ impl<P: PartitionInfo, C: ClusterInfo> JobAssembly<Record> for IRJobAssembly<P, 
         })
     }
 }
+
 
 #[inline]
 fn decode<T: Message + Default>(binary: &[u8]) -> FnGenResult<T> {

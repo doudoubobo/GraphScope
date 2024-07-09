@@ -25,5 +25,5 @@ pub use graph::element::{
     VertexOrEdge,
 };
 pub use graph::{read_id, write_id, Direction, QueryParams, ID};
-pub use read_graph::{from_fn, get_graph, register_graph, ReadGraph, Statement};
+pub use read_graph::{from_fn, get_graph, register_graph, ReadGraph, Statement, replace_process_partition_lists, get_process_partition_lists, replace_server_index, get_server_index};
 pub use write_graph::WriteGraphProxy;
