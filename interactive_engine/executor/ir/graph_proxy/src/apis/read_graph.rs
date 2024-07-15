@@ -16,12 +16,16 @@
 use std::sync::atomic::{AtomicPtr, Ordering};
 use std::sync::Arc;
 use std::collections::HashMap;
+use std::sync::Mutex;
 
 use ir_common::LabelId;
 
 use crate::apis::graph::PKV;
 use crate::apis::{Direction, Edge, QueryParams, Vertex, ID};
 use crate::GraphProxyResult;
+
+use grin::grin::GrinGraph;
+use grin::grin::GrinPartitionedGraph;
 
 /// The function for graph query
 pub trait Statement<I, O>: Send + 'static {
@@ -93,6 +97,14 @@ pub trait ReadGraph: Send + Sync {
     fn get_primary_key(&self, id: &ID) -> GraphProxyResult<Option<PKV>>;
 }
 
+pub struct GrinPartitionedGraphPtr(GrinPartitionedGraph);
+
+unsafe impl Send for GrinPartitionedGraphPtr {}
+
+pub struct GrinGraphPtr(GrinGraph);
+
+unsafe impl Send for GrinGraphPtr {}
+
 lazy_static! {
     /// GRAPH_PROXY is a raw pointer which can be safely shared between threads.
     pub static ref GRAPH_PROXY: AtomicPtr<Arc<dyn ReadGraph >> = AtomicPtr::default();
@@ -100,6 +112,12 @@ lazy_static! {
     pub static ref PROCESS_PARTITION_LISTS: std::sync::RwLock<HashMap<u32, Vec<u32>>> = std::sync::RwLock::new(HashMap::new());
     /// server_index is a u32
     pub static ref SERVER_INDEX: std::sync::RwLock<u32> = std::sync::RwLock::new(0);
+    /// read_version is a u32
+    pub static ref READ_VERSION: std::sync::RwLock<u32> = std::sync::RwLock::new(0);
+    /// grin_partitioned_graph is a GrinPartitionedGraph (i.e., a raw pointer)
+    pub static ref GRIN_PARTITIONED_GRAPH: Mutex<GrinPartitionedGraphPtr> = Mutex::new(GrinPartitionedGraphPtr(std::ptr::null_mut()));
+    /// grin_graph is a GrinGraph (i.e., a raw pointer)
+    pub static ref GRIN_GRAPH: Mutex<GrinGraphPtr> = Mutex::new(GrinGraphPtr(std::ptr::null_mut()));
 
 }
 
@@ -135,4 +153,34 @@ pub fn replace_server_index(new_index: u32) {
 pub fn get_server_index() -> u32 {
     let server_index = SERVER_INDEX.read().unwrap();
     *server_index
+}
+
+pub fn replace_read_version(new_version: u32) {
+    let mut read_version = READ_VERSION.write().unwrap();
+    *read_version = new_version;
+}
+
+pub fn get_read_version() -> u32 {
+    let read_version = READ_VERSION.read().unwrap();
+    *read_version
+}
+
+pub fn replace_grin_graph(new_graph: GrinGraph) {
+    let mut grin_graph = GRIN_GRAPH.lock().unwrap();
+    grin_graph.0 = new_graph;
+}
+
+pub fn get_grin_graph() -> GrinGraph {
+    let grin_graph = GRIN_GRAPH.lock().unwrap();
+    grin_graph.0.clone()
+}
+
+pub fn replace_grin_partitioned_graph(new_graph: GrinPartitionedGraph) {
+    let mut grin_partitioned_graph = GRIN_PARTITIONED_GRAPH.lock().unwrap();
+    grin_partitioned_graph.0 = new_graph;
+}
+
+pub fn get_grin_partitioned_graph() -> GrinPartitionedGraph {
+    let grin_partitioned_graph = GRIN_PARTITIONED_GRAPH.lock().unwrap();
+    grin_partitioned_graph.0.clone()
 }

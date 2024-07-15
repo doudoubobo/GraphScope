@@ -21,7 +21,7 @@ use std::env;
 use graph_proxy::apis::PegasusClusterInfo;
 use graph_proxy::GrinGraphProxy;
 use graph_proxy::{create_grin_store, GrinPartition};
-use graph_proxy::apis::{replace_process_partition_lists, replace_server_index};
+use graph_proxy::apis::{replace_process_partition_lists, replace_server_index, replace_grin_partitioned_graph};
 use grin::grin::grin_get_partitioned_graph_from_storage;
 use grin::string_rust2c;
 use grin_gart::error::{StartServerError, StartServerResult};
@@ -101,6 +101,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("uri: {:?}", uri);
         let uri_cstr = string_rust2c(&uri);
         let pg = grin_get_partitioned_graph_from_storage(uri_cstr);
+        replace_grin_partitioned_graph(pg);
         let grin_graph_proxy = GrinGraphProxy::new(pg).unwrap();
         let process_partition_list = grin_graph_proxy.get_local_partition_ids();
 

@@ -22,6 +22,9 @@ use grin::grin::*;
 use grin::{string_c2rust, string_rust2c};
 use ir_common::{LabelId, NameOrId, OneOrMany};
 
+/// use replace_grin_graph
+use crate::apis::replace_grin_graph;
+
 use crate::adapters::grin_store::details::{LazyEdgeDetails, LazyVertexDetails};
 use crate::apis::graph::{ID, PKV};
 use crate::apis::partitioner::PartitionId;
@@ -1105,6 +1108,7 @@ impl GrinGraphProxy {
                 }
                 let partition_id = grin_get_partition_id(partitioned_graph, partition);
                 let graph = grin_get_local_graph_by_partition(partitioned_graph, partition);
+                replace_grin_graph(graph);
                 graphs.insert(partition_id, graph);
                 grin_destroy_partition(partitioned_graph, partition);
             }
