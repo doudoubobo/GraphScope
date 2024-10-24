@@ -26,4 +26,6 @@ pub use graph::element::{
 };
 pub use graph::{read_id, write_id, Direction, QueryParams, ID};
 pub use read_graph::{from_fn, get_graph, register_graph, ReadGraph, Statement};
+pub use read_graph::{replace_read_version, get_read_version, replace_grin_partitioned_graph, get_grin_partitioned_graph, replace_grin_graph, get_grin_graph};
+pub use read_graph::{replace_process_partition_lists, get_process_partition_lists, replace_server_index, get_server_index};
 pub use write_graph::WriteGraphProxy;
