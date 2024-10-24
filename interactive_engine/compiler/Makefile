@@ -24,7 +24,7 @@ query:=
 physical:=
 procedure:=
 extra:=
-config.path:=conf/ir.compiler.properties
+config.path:=/home/graphscope/gie-frontend-config.properties
 
 build:
 	cd $(CUR_DIR)/.. && \
